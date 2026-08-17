@@ -1,0 +1,70 @@
+.quadro-kanban {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    width: 100%;
+    margin-top: 10px;
+}
+
+@media (max-width: 900px) {
+    .quadro-kanban {
+        grid-template-columns: 1fr;
+    }
+}
+
+.coluna {
+    background-color: #f3f4f6;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    min-height: 400px;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.05);
+}
+
+.coluna-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.coluna-header h3 {
+    font-size: 1.1rem;
+    color: #1f2937;
+}
+
+.contador {
+    background: #d1d5db;
+    color: #374151;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+.coluna-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+}
+
+.listaKanban {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0;
+    margin: 0;
+}
+
+.vazio {
+    color: #9ca3af;
+    font-size: 0.85rem;
+    text-align: center;
+    margin-top: 20px;
+    font-style: italic;
+}

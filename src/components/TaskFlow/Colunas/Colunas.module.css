@@ -1,0 +1,107 @@
+.quadro-kanban {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  width: 100%;
+  margin-top: 10px;
+  box-sizing: border-box;
+}
+
+.coluna {
+  background-color: #f3f4f6;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 400px;
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.05);
+}
+
+.colunaHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.tituloGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.colunaHeader h3 {
+  font-size: 1.1rem;
+  color: #1f2937;
+  margin: 0;
+}
+
+.contador {
+  background: #d1d5db;
+  color: #374151;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.btnMais {
+  background-color: transparent;
+  border: none;
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #4b5563;
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  padding: 0;
+  line-height: 1;
+}
+
+.btnMais:hover {
+  background-color: #e5e7eb;
+  color: #111827;
+}
+
+.btnMais:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #007bff;
+}
+
+.colunaBody {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.listaKanban {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+}
+
+.vazio {
+  color: #9ca3af;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 20px;
+  font-style: italic;
+}
+
+@media (max-width: 900px) {
+  .quadro-kanban {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,22 @@
+#lista-section {
+    width: 100%;
+    max-width: 700px;
+    margin: 10px auto 0;
+}
+
+#lista-tarefas {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0;
+    margin: 0;
+}
+
+.msg-vazia {
+    color: #9ca3af;
+    font-size: 0.85rem;
+    text-align: center;
+    margin-top: 15px;
+    font-style: italic;
+}

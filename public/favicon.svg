@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Gradiente do Flow/Seta -->
+    <linearGradient id="tfGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0066FF" />
+      <stop offset="50%" stop-color="#00C8FF" />
+      <stop offset="100%" stop-color="#22C55E" />
+    </linearGradient>
+  </defs>
+
+  <!-- Fundo Arredondado Dark Moderno -->
+  <rect width="512" height="512" rx="112" fill="#0F172A" />
+
+  <!-- Símbolo TF / Seta de Progresso -->
+  <g fill="none" stroke="url(#tfGradient)" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Barra Superior do T com Seta pra Cima/Direita -->
+    <path d="M 120 160 L 340 160 M 340 160 L 290 110 M 340 160 L 290 210" stroke-width="48" />
+    <!-- Haste Curvada do T/F (Sensação de 'Flow') -->
+    <path d="M 230 160 C 230 280, 160 360, 230 380 C 290 395, 360 340, 390 300" stroke-width="44" />
+    <!-- Checkmark do F (Conclusão de Tarefa) -->
+    <path d="M 270 270 L 320 320 L 400 220" stroke-width="40" />
+  </g>
+</svg>
