@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, Navigate } from "react-router-dom";
 
 import Rotaprivada from "./components/TaskFlow/Rotaprivada/Rotaprivada";
 import Login from "./pages/Login/Login";
@@ -8,23 +8,26 @@ import Sidebar from "./components/TaskFlow/Sidebar/Sidebar";
 
 function App() {
   return (
-      <div className="app-layout">
-        <Sidebar />
-        <main>
-          <Routes>
-            <Route
-              path="/taskflow"
-              element={
-                <Rotaprivada>
-                  <Kanban />
-                </Rotaprivada>
-              }
-            />
-            <Route path="/login" element={<Login />} />
-            <Route path="/sobre" element={<Sobre />} />
-          </Routes>
-        </main>
-      </div>
+    <div className="app-layout">
+      <Sidebar />
+      <main>
+        <Routes>
+          {/* Redireciona a rota inicial para o login */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
+
+          <Route
+            path="/taskflow"
+            element={
+              <Rotaprivada>
+                <Kanban />
+              </Rotaprivada>
+            }
+          />
+          <Route path="/login" element={<Login />} />
+          <Route path="/sobre" element={<Sobre />} />
+        </Routes>
+      </main>
+    </div>
   );
 }
 
