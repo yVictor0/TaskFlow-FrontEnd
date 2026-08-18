@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import styles from './sidebar.module.css';
 import { useAuth } from '../../../contexts/AuthContext';
 
 function Sidebar() {
+  const [estaAberta, setEstaAberta] = useState(true); // Estado para controlar a visibilidade
   const { logado, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -15,39 +17,53 @@ function Sidebar() {
     isActive ? `${styles.link} ${styles.ativo}` : styles.link;
 
   return (
-    <aside className={styles.sidebar} aria-label="Menu Lateral">
-      <div className={styles.logo}>
-        <h1>MeuApp</h1>
-      </div>
+    <>
+      {/* Botão de Toggle (Hambúrguer / Fechar) */}
+      <button 
+        className={styles.btnToggle} 
+        onClick={() => setEstaAberta(!estaAberta)}
+        aria-label="Alternar Menu"
+      >
+        {estaAberta ? '✕' : '☰'}
+      </button>
 
-      <nav className={styles.nav}>
-        {!logado && (
-          <NavLink to="/login" className={getLinkClass}>
-            Login
-          </NavLink>
-        )}
+      {/* Renderiza a Sidebar somente se estaAberta for true */}
+      {estaAberta && (
+        <aside className={styles.sidebar} aria-label="Menu Lateral">
+          <div className={styles.logo}>
+            <h1>MeuApp</h1>
+          </div>
 
-        {logado && (
-          <NavLink to="/taskflow" className={getLinkClass}>
-            TaskFlow
-          </NavLink>
-        )}
+          <nav className={styles.nav}>
+            {!logado && (
+              <NavLink to="/login" className={getLinkClass}>
+                Login
+              </NavLink>
+            )}
 
-        <NavLink to="/sobre" className={getLinkClass}>
-          Sobre
-        </NavLink>
-      </nav>
+            {logado && (
+              <NavLink to="/taskflow" className={getLinkClass}>
+                TaskFlow
+              </NavLink>
+            )}
 
-      {logado && (
-        <button 
-          type="button" 
-          onClick={handleLogout}
-          className={styles.btnLogout}
-        >
-          Sair
-        </button>
+            <NavLink to="/sobre" className={getLinkClass}>
+              Sobre
+            </NavLink>
+          </nav>
+
+          {logado && (
+            <button 
+              type="button" 
+              onClick={handleLogout}
+              className={styles.btnLogout}
+            >
+              Sair
+            </button>
+          )}
+        </aside>
       )}
-    </aside>
+    </>
   );
 }
 
