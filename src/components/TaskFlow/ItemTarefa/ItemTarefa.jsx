@@ -1,9 +1,16 @@
 import styles from './ItemTarefa.module.css';
 
-
-function ItemTarefa({tarefa, onDeletar, onConcluir, onMover, exibirAcoesKanban = false, onEditar
+function ItemTarefa({
+  tarefa,
+  onDeletar,
+  onConcluir,
+  onMover,
+  exibirAcoesKanban = false,
+  onEditar
 }) {
-  const { id, texto, cidade, prioridade, concluida, coluna } = tarefa;
+  const { id, texto, cidade, prioridade, concluida } = tarefa;
+  
+  const coluna = tarefa.coluna || 'afazer';
 
   const classeItem = `${styles.tarefa} ${concluida ? styles.concluida : ''}`;
   const classeTexto = `${styles.textoTarefa} ${concluida ? styles.textoConcluido : ''}`;
@@ -21,17 +28,35 @@ function ItemTarefa({tarefa, onDeletar, onConcluir, onMover, exibirAcoesKanban =
         {exibirAcoesKanban && (
           <div className={styles.botoesMover}>
             {coluna !== 'afazer' && (
-              <button onClick={(e) => { e.stopPropagation(); onMover(id, 'afazer'); }}>
+              <button 
+                type="button"
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  onMover(id, 'afazer'); 
+                }}
+              >
                 ← A Fazer
               </button>
             )}
             {coluna !== 'emandamento' && (
-              <button onClick={(e) => { e.stopPropagation(); onMover(id, 'emandamento'); }}>
+              <button 
+                type="button"
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  onMover(id, 'emandamento'); 
+                }}
+              >
                 {coluna === 'concluido' ? '← Em Andamento' : 'Em Andamento →'}
               </button>
             )}
             {coluna !== 'concluido' && (
-              <button onClick={(e) => { e.stopPropagation(); onMover(id, 'concluido'); }}>
+              <button 
+                type="button"
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  onMover(id, 'concluido'); 
+                }}
+              >
                 Concluir →
               </button>
             )}
@@ -39,9 +64,17 @@ function ItemTarefa({tarefa, onDeletar, onConcluir, onMover, exibirAcoesKanban =
         )}
 
         {onEditar && (
-          <button className={styles.btnDeletar} onClick={() => onEditar(tarefa)}>📝</button>
+          <button 
+            type="button"
+            className={styles.btnDeletar} 
+            onClick={(e) => {
+              e.stopPropagation();
+              onEditar(tarefa);
+            }}
+          >
+            📝
+          </button>
         )}
-
 
         {onDeletar && (
           <button
@@ -54,13 +87,10 @@ function ItemTarefa({tarefa, onDeletar, onConcluir, onMover, exibirAcoesKanban =
           >
             🗑️
           </button>
-          
-
         )}
       </div>
     </li>
-    
-  )
+  );
 }
 
 export default ItemTarefa;

@@ -10,11 +10,12 @@ import ModalConfirmacao from '../../components/TaskFlow/ModalConfirmacao/ModalCo
 
 import styles from './TaskFlow.module.css';
 
+const api_url = 'https://6a85aef09c451dc67a63f689.mockapi.io/tarefas';
+
 function TaskFlow() {
-  const [tarefas, setTarefas] = useState(() => {
-    const salvo = localStorage.getItem('taskflow-tarefas');
-    return salvo ? JSON.parse(salvo) : [];
-  });
+  const [tarefas, setTarefas] = useState([]);
+  const [carregar, setCarregar] = useState(true);
+  const [erro, setErro] = useState('');
 
   const [texto, setTexto] = useState('');
   const [cep, setCep] = useState('');
@@ -27,25 +28,34 @@ function TaskFlow() {
   const [idParaDeletar, setIdParaDeletar] = useState(null);
 
   useEffect(() => {
-    localStorage.setItem('taskflow-tarefas', JSON.stringify(tarefas));
-  }, [tarefas]);
+    async function carregarTarefas() {
+      try {
+        setCarregar(true);
+        setErro('');
+        const resposta = await axios.get(api_url);
+        setTarefas(resposta.data);
+      } catch (e) {
+        setErro('Deu Erro ao carregar');
+        console.error(e);
+      } finally {
+        setCarregar(false);
+      }
+    }
+    carregarTarefas();
+  }, []);
 
   async function consultarCidade(cepDigitado) {
     const apenasNumeros = cepDigitado.replace(/\D/g, '');
-    
     if (apenasNumeros.length !== 8) {
       alert('CEP inválido! O CEP deve conter 8 dígitos.');
-      return ''; 
+      return '';
     }
-
     try {
       const resposta = await axios.get(`https://viacep.com.br/ws/${apenasNumeros}/json/`);
-      
       if (resposta.data.erro) {
         alert('CEP não encontrado!');
         return '';
       }
-
       return `${resposta.data.localidade} - ${resposta.data.uf}`;
     } catch (erro) {
       console.error('Erro ao buscar o CEP:', erro);
@@ -58,29 +68,88 @@ function TaskFlow() {
     if (texto.trim() === '') return;
 
     let cidadeEncontrada = '';
-
     if (cep.trim() !== '') {
       cidadeEncontrada = await consultarCidade(cep);
     }
 
-    const novaTarefa = {
-      id: Date.now(),
-      texto: texto.trim(),
-      cidade: cidadeEncontrada,
-      concluida: false,
-      prioridade: prioridade,
-      coluna: 'afazer'
-    };
+    try {
+      const { data: novaTarefa } = await axios.post(api_url, {
+        texto: texto.trim(),
+        cidade: cidadeEncontrada,
+        concluida: false,
+        prioridade: prioridade,
+        coluna: 'afazer'
+      });
 
-    setTarefas(prev => [...prev, novaTarefa]);
-    setTexto('');
-    setCep('');
+      setTarefas(prev => [...prev, novaTarefa]);
+      setTexto('');
+      setCep('');
+    } catch (e) {
+      setErro('Erro ao adicionar tarefa.');
+      console.error(e);
+    }
   }
 
-  function moverTarefas(id, novaColuna) {
-    setTarefas(prev =>
-      prev.map(t => (t.id === id ? { ...t, coluna: novaColuna } : t))
-    );
+  async function salvarTarefa(dados) {
+    try {
+      if (dados.id !== undefined) {
+        const { data: tarefaEditada } = await axios.put(`${api_url}/${dados.id}`, {
+          ...dados,
+          coluna: String(dados.coluna || 'afazer'),
+        });
+        setTarefas(tarefasAtuais => tarefasAtuais.map(t => (t.id === dados.id ? tarefaEditada : t)));
+      } else {
+        const { data: novaTarefa } = await axios.post(api_url, {
+          ...dados,
+          coluna: String(dados.coluna || 'afazer'),
+        });
+        setTarefas(tarefasAtuais => [...tarefasAtuais, novaTarefa]);
+      }
+      setModalAberto(false);
+      setTarefaEmEdicao(null);
+    } catch (e) {
+      setErro('Erro ao salvar tarefa.');
+      console.error(e);
+    }
+  }
+
+  async function deletarTarefa(id) {
+    try {
+      await axios.delete(`${api_url}/${id}`);
+      setTarefas(tarefasAtuais => tarefasAtuais.filter(t => t.id !== id));
+    } catch (e) {
+      setErro('Erro ao deletar tarefa. Tente novamente.');
+      console.error(e);
+    }
+  }
+
+  async function moverTarefa(id, novaColuna) {
+    try {
+      const tarefaAtual = tarefas.find(t => t.id === id);
+      if (!tarefaAtual) return;
+
+      let proximaColuna = novaColuna;
+      if (!proximaColuna || typeof proximaColuna !== 'string') {
+        if (tarefaAtual.coluna === 'afazer') proximaColuna = 'emandamento';
+        else if (tarefaAtual.coluna === 'emandamento') proximaColuna = 'concluido';
+        else proximaColuna = 'afazer';
+      }
+
+      const objetoAtualizado = {
+        ...tarefaAtual,
+        coluna: proximaColuna
+      };
+
+      const { data: tarefaMovida } = await axios.put(`${api_url}/${id}`, objetoAtualizado);
+
+      setTarefas(tarefasAtuais =>
+        tarefasAtuais.map(t => (t.id === id ? tarefaMovida : t))
+      );
+      setErro('');
+    } catch (e) {
+      setErro('Erro ao mover tarefa. Tente novamente.');
+      console.error('Erro na requisição PUT:', e);
+    }
   }
 
   function solicitarDelecao(id) {
@@ -89,17 +158,13 @@ function TaskFlow() {
   }
 
   function confirmarDelecao() {
-    if (idParaDeletar) {
-      setTarefas(prev => prev.filter(t => t.id !== idParaDeletar));
-    }
+    if (idParaDeletar) deletarTarefa(idParaDeletar);
     setModalDeletarAberto(false);
     setIdParaDeletar(null);
   }
 
   function alternarConcluida(id) {
-    setTarefas(prev =>
-      prev.map(t => (t.id === id ? { ...t, concluida: !t.concluida } : t))
-    );
+    setTarefas(prev => prev.map(t => (t.id === id ? { ...t, concluida: !t.concluida } : t)));
   }
 
   function abrirModalEdicao(tarefa) {
@@ -109,71 +174,49 @@ function TaskFlow() {
 
   function abrirModalNovaTarefa(idColuna) {
     setTarefaEmEdicao(null);
-    setColunaParaNovaTarefa(idColuna);
+    setColunaParaNovaTarefa(typeof idColuna === 'string' ? idColuna : 'afazer');
     setModalAberto(true);
-  }
-
-  function salvarTarefa(tarefaRecebida) {
-    setTarefas(prev => {
-      const existe = prev.some(t => String(t.id) === String(tarefaRecebida.id));
-      
-      if (existe) {
-        return prev.map(t => 
-          String(t.id) === String(tarefaRecebida.id) ? { ...t, ...tarefaRecebida } : t
-        );
-      }
-      
-      return [...prev, { ...tarefaRecebida, cidade: tarefaRecebida.cidade || '' }];
-    });
-
-    setModalAberto(false);
-    setTarefaEmEdicao(null);
   }
 
   return (
     <div className={styles.app}>
       <main className={styles.container}>
         <Header tarefas={tarefas} />
-
+        {carregar && <div className={styles.loading}>Carregando tarefas...</div>}
+        {erro && <div className={styles.erro}>{erro}</div>}
         <section className={styles.formulario}>
           <input
             className={styles.inputTarefa}
-            type='text'
+            type="text"
             value={texto}
             required
-            autoComplete='off'
+            autoComplete="off"
             onChange={e => setTexto(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && adicionarTarefa()}
-            placeholder='Nova Tarefa...'
+            placeholder="Nova Tarefa..."
           />
           <input
             className={styles.input}
             type="text"
             value={cep}
-            autoComplete='off'
+            autoComplete="off"
             maxLength={9}
-            onChange={(e) => setCep(e.target.value)}
+            onChange={e => setCep(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && adicionarTarefa()}
             placeholder="CEP (opcional)..."
           />
-          <Opcoes
-            novaPropriedade={prioridade}
-            setNovaPropriedade={setPrioridade}
-          />
-
+          <Opcoes novaPropriedade={prioridade} setNovaPropriedade={setPrioridade} />
           <button className={styles.btnAdicionar} onClick={adicionarTarefa}>
             Adicionar
           </button>
         </section>
-
         <Colunas
           tarefas={tarefas}
-          onMover={moverTarefas}
+          onMover={moverTarefa}
           onDeletar={solicitarDelecao}
           onEditar={abrirModalEdicao}
           onAdicionar={abrirModalNovaTarefa}
         />
-
         <ListaTarefa
           tarefas={tarefas}
           onDeletar={solicitarDelecao}
@@ -181,7 +224,6 @@ function TaskFlow() {
           onEditar={abrirModalEdicao}
         />
       </main>
-
       <ModalTarefa
         aberto={modalAberto}
         tarefa={tarefaEmEdicao}
@@ -192,7 +234,6 @@ function TaskFlow() {
           setTarefaEmEdicao(null);
         }}
       />
-
       <ModalConfirmacao
         aberto={modalDeletarAberto}
         titulo="Excluir Tarefa?"
@@ -203,7 +244,6 @@ function TaskFlow() {
           setIdParaDeletar(null);
         }}
       />
-
       <footer className={styles.footer}>
         <p>TaskFlow 2026 - Aluno: Yan</p>
       </footer>

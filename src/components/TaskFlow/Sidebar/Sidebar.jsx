@@ -18,7 +18,6 @@ function Sidebar() {
 
   return (
     <>
-      {/* Botão de Toggle (Hambúrguer / Fechar) */}
       <button 
         className={styles.btnToggle} 
         onClick={() => setEstaAberta(!estaAberta)}
@@ -27,7 +26,6 @@ function Sidebar() {
         {estaAberta ? '✕' : '☰'}
       </button>
 
-      {/* Renderiza a Sidebar somente se estaAberta for true */}
       {estaAberta && (
         <aside className={styles.sidebar} aria-label="Menu Lateral">
           <div className={styles.logo}>
