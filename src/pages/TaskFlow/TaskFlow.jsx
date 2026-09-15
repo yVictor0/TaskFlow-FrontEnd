@@ -90,6 +90,9 @@ function TaskFlow() {
     }
   }
 
+  //erro \/
+
+
   async function salvarTarefa(dados) {
     try {
       if (dados.id !== undefined) {
@@ -112,6 +115,8 @@ function TaskFlow() {
       console.error(e);
     }
   }
+
+  //erro /\
 
   async function deletarTarefa(id) {
     try {

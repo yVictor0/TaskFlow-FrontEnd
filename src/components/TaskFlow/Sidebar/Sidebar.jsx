@@ -4,7 +4,7 @@ import styles from './sidebar.module.css';
 import { useAuth } from '../../../contexts/AuthContext';
 
 function Sidebar() {
-  const [estaAberta, setEstaAberta] = useState(true); // Estado para controlar a visibilidade
+  const [estaAberta, setEstaAberta] = useState(true); 
   const { logado, logout } = useAuth();
   const navigate = useNavigate();
 

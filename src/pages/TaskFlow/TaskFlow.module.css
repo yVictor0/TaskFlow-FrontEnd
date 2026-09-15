@@ -1,5 +1,4 @@
 .app {
-  /* Centraliza a aplicação na tela */
   margin: 0 auto;
   background-color: #f8f9fa;
   width: 100%;
@@ -11,7 +10,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  box-sizing: border-box; /* Garante que o padding não estoure a largura total */
+  box-sizing: border-box; 
 }
 
 .container {
@@ -43,7 +42,7 @@
   border-radius: 6px;
   font-size: 15px;
   outline: none;
-  box-sizing: border-box; /* Evita que o input passe da borda do formulário */
+  box-sizing: border-box; 
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -98,7 +97,6 @@
   letter-spacing: 0.5px;
 }
 
-/* Responsividade para telas menores */
 @media (max-width: 768px) {
   .app {
     padding: 16px;

@@ -5,14 +5,17 @@ import Login from "./pages/Login/Login";
 import Kanban from "./pages/TaskFlow/TaskFlow";
 import Sobre from "./pages/Sobre";
 import Sidebar from "./components/TaskFlow/Sidebar/Sidebar";
+import { useAuth } from "./contexts/AuthContext"; 
+
 
 function App() {
+  const { token } = useAuth();
   return (
     <div className="app-layout">
-      <Sidebar />
+      {token && <Sidebar />}
+      marginLeft: token ? '220px' : '0'
       <main>
         <Routes>
-          {/* Redireciona a rota inicial para o login */}
           <Route path="/" element={<Navigate to="/login" replace />} />
 
           <Route
@@ -25,7 +28,7 @@ function App() {
           />
           <Route path="/login" element={<Login />} />
           <Route path="/sobre" element={<Sobre />} />
-        </Routes>
+        </Routes>   
       </main>
     </div>
   );
