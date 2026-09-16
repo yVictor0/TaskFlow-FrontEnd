@@ -1,40 +1,52 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState } from 'react';
+import { useNavigate } from 'react-router';
+// 1. Adicionar import no topo (ajustado para o seu caminho relativo)
+import api from '../../interceptor/api'; 
 import { useAuth } from '../../contexts/AuthContext';
-import './Login.css'
+import './Login.css';
 
 function Login() {
-  const [usuario, setUsuario] = useState('')
-  const [senha, setSenha] = useState('')
-  const [erro, setErro] = useState('')
-  const [ shake, setShake ] = useState(false)
-  const { login } = useAuth() 
-  const navigate = useNavigate()
+  // 2. Estado 'email' para o input de login
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [erro, setErro] = useState('');
+  const [shake, setShake] = useState(false);
+  
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-  function handleLogin() {
-    if (usuario === 'admin' && senha === '1234') { 
-      login()
-      navigate('/taskflow') 
-      return
+  // 3. Versão async do handleLogin
+  async function handleLogin() {
+    setErro('');
+    try {
+      const resposta = await api.post('/auth/login', {
+        email,
+        senha,
+      });
+      
+      const { token, usuario } = resposta.data;
+      login(usuario, token); 
+      navigate('/'); 
+    } catch (err) {
+      setErro(err.response?.data?.erro || 'Erro ao fazer login');
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
     }
-
-    setErro('Usuário ou senha incorretos')
-    setShake(true)
-    setTimeout(() => setShake(false), 500)
   }
 
   return (
     <div className='login-container'>
-      <div className={`login-card ${shake ? 'shake' : ''}`} >
+      <div className={`login-card ${shake ? 'shake' : ''}`}>
         <h1 className='login-logo'>TaskFlow</h1>
         <p className='login-subtitulo'>Faça login para continuar</p>
 
         <input
           className='login-input'
-          type='text'
-          placeholder='Usuário'
-          value={usuario}
-          onChange={e => setUsuario(e.target.value)}
+          type='email'
+          placeholder='E-mail'
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleLogin()}
         />
 
         <input
@@ -45,7 +57,7 @@ function Login() {
           onChange={e => setSenha(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleLogin()}
         />
-        
+
         {erro && <p className='login-erro'>{erro}</p>}
 
         <button className='login-btn' onClick={handleLogin}>
@@ -56,9 +68,9 @@ function Login() {
           Este login é apenas para fins didáticos.
           Credenciais reais vêm no módulo back-end.
         </p>
-      </div> 
+      </div>
     </div>
-  )
+  );
 }
 
-export default Login
+export default Login;

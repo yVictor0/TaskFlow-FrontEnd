@@ -2,30 +2,36 @@ import { Route, Routes, Navigate } from "react-router-dom";
 
 import Rotaprivada from "./components/TaskFlow/Rotaprivada/Rotaprivada";
 import Login from "./pages/Login/Login";
-import Kanban from "./pages/TaskFlow/TaskFlow";
-import Sobre from "./pages/Sobre";
+import Taskflow from "./pages/TaskFlow/TaskFlow";
+import Sobre from "./pages/Sobre/Sobre";
 import Sidebar from "./components/TaskFlow/Sidebar/Sidebar";
-import { useAuth } from "./contexts/AuthContext"; 
-
+import { useAuth } from "./contexts/AuthContext";
 
 function App() {
   const { token } = useAuth();
+
   return (
     <div className="app-layout">
+      {/* Exibe a Sidebar apenas quando o usuário possui token */}
       {token && <Sidebar />}
-      marginLeft: token ? '220px' : '0'
-      <main>
+
+      <main style={{ marginLeft: token ? '220px' : '0', transition: 'margin-left 0.3s' }}>
         <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          {/* Redireciona a raiz '/' para '/taskflow' caso esteja autenticado, ou '/login' */}
+          <Route 
+            path="/" 
+            element={<Navigate to={token ? "/taskflow" : "/login"} replace />} 
+          />
 
           <Route
             path="/taskflow"
             element={
               <Rotaprivada>
-                <Kanban />
+                <Taskflow />
               </Rotaprivada>
             }
           />
+          
           <Route path="/login" element={<Login />} />
           <Route path="/sobre" element={<Sobre />} />
         </Routes>   

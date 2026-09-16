@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
+import api from '../../interceptor/api';
 import Header from '../../components/TaskFlow/Header/Header.jsx';
 import ListaTarefa from '../../components/TaskFlow/ListaTarefa/ListaTarefa.jsx';
 import Opcoes from '../../components/TaskFlow/Opcaos/Opcaos.jsx';
@@ -9,8 +10,6 @@ import ModalTarefa from '../../components/TaskFlow/TarefaModal/TarefaModal.jsx';
 import ModalConfirmacao from '../../components/TaskFlow/ModalConfirmacao/ModalConfirmacao.jsx';
 
 import styles from './TaskFlow.module.css';
-
-const api_url = 'https://6a85aef09c451dc67a63f689.mockapi.io/tarefas';
 
 function TaskFlow() {
   const [tarefas, setTarefas] = useState([]);
@@ -27,20 +26,23 @@ function TaskFlow() {
   const [modalDeletarAberto, setModalDeletarAberto] = useState(false);
   const [idParaDeletar, setIdParaDeletar] = useState(null);
 
+  // BUSCA ATUALIZADA (Sessão 7.3) — Token injetado via Interceptor
   useEffect(() => {
     async function carregarTarefas() {
       try {
         setCarregar(true);
         setErro('');
-        const resposta = await axios.get(api_url);
+        // api.get — token injetado automaticamente pelo interceptor
+        const resposta = await api.get('/tarefas');
         setTarefas(resposta.data);
       } catch (e) {
-        setErro('Deu Erro ao carregar');
+        setErro('Erro ao carregar tarefas. Verifique a conexão.');
         console.error(e);
       } finally {
         setCarregar(false);
       }
     }
+
     carregarTarefas();
   }, []);
 
@@ -73,7 +75,7 @@ function TaskFlow() {
     }
 
     try {
-      const { data: novaTarefa } = await axios.post(api_url, {
+      const { data: novaTarefa } = await api.post('/tarefas', {
         texto: texto.trim(),
         cidade: cidadeEncontrada,
         concluida: false,
@@ -90,70 +92,64 @@ function TaskFlow() {
     }
   }
 
-  //erro \/
-
-
+  // SALVAR — POST / PUT conforme instrução do professor
   async function salvarTarefa(dados) {
-    try {
-      if (dados.id !== undefined) {
-        const { data: tarefaEditada } = await axios.put(`${api_url}/${dados.id}`, {
-          ...dados,
-          coluna: String(dados.coluna || 'afazer'),
-        });
-        setTarefas(tarefasAtuais => tarefasAtuais.map(t => (t.id === dados.id ? tarefaEditada : t)));
-      } else {
-        const { data: novaTarefa } = await axios.post(api_url, {
-          ...dados,
-          coluna: String(dados.coluna || 'afazer'),
-        });
-        setTarefas(tarefasAtuais => [...tarefasAtuais, novaTarefa]);
+    let cidadeEncontrada = dados.cidade || '';
+
+    if (dados.cep && dados.cep.trim() !== '') {
+      cidadeEncontrada = await consultarCidade(dados.cep);
+    }
+
+    const payload = {
+      ...dados,
+      cidade: cidadeEncontrada
+    };
+
+    if (dados.id === undefined) {
+      // CRIAR — POST /tarefas
+      try {
+        const resposta = await api.post('/tarefas', payload);
+        // id real vem do servidor
+        setTarefas(prev => [...prev, resposta.data]);
+        setModalAberto(false);
+      } catch (err) {
+        setErro('Erro ao criar tarefa.');
+        console.error(err);
       }
-      setModalAberto(false);
-      setTarefaEmEdicao(null);
-    } catch (e) {
-      setErro('Erro ao salvar tarefa.');
-      console.error(e);
+    } else {
+      // EDITAR — PUT /tarefas/:id
+      try {
+        const resposta = await api.put(`/tarefas/${dados.id}`, payload);
+        // garante que o estado reflete o servidor
+        setTarefas(prev => prev.map(t => (t.id === dados.id ? resposta.data : t)));
+        setModalAberto(false);
+      } catch (err) {
+        setErro('Erro ao editar tarefa.');
+        console.error(err);
+      }
     }
   }
 
-  //erro /\
-
+  // DELETAR — DELETE /tarefas/:id
   async function deletarTarefa(id) {
     try {
-      await axios.delete(`${api_url}/${id}`);
-      setTarefas(tarefasAtuais => tarefasAtuais.filter(t => t.id !== id));
-    } catch (e) {
-      setErro('Erro ao deletar tarefa. Tente novamente.');
-      console.error(e);
+      await api.delete(`/tarefas/${id}`);
+      // só remove do estado após confirmar no servidor
+      setTarefas(prev => prev.filter(t => t.id !== id));
+    } catch (err) {
+      setErro('Erro ao deletar tarefa.');
+      console.error(err);
     }
   }
 
+  // MOVER — PUT /tarefas/:id com nova coluna
   async function moverTarefa(id, novaColuna) {
     try {
-      const tarefaAtual = tarefas.find(t => t.id === id);
-      if (!tarefaAtual) return;
-
-      let proximaColuna = novaColuna;
-      if (!proximaColuna || typeof proximaColuna !== 'string') {
-        if (tarefaAtual.coluna === 'afazer') proximaColuna = 'emandamento';
-        else if (tarefaAtual.coluna === 'emandamento') proximaColuna = 'concluido';
-        else proximaColuna = 'afazer';
-      }
-
-      const objetoAtualizado = {
-        ...tarefaAtual,
-        coluna: proximaColuna
-      };
-
-      const { data: tarefaMovida } = await axios.put(`${api_url}/${id}`, objetoAtualizado);
-
-      setTarefas(tarefasAtuais =>
-        tarefasAtuais.map(t => (t.id === id ? tarefaMovida : t))
-      );
-      setErro('');
-    } catch (e) {
-      setErro('Erro ao mover tarefa. Tente novamente.');
-      console.error('Erro na requisição PUT:', e);
+      const resposta = await api.put(`/tarefas/${id}`, { coluna: novaColuna });
+      setTarefas(prev => prev.map(t => (t.id === id ? resposta.data : t)));
+    } catch (err) {
+      setErro('Erro ao mover tarefa.');
+      console.error(err);
     }
   }
 
@@ -169,7 +165,9 @@ function TaskFlow() {
   }
 
   function alternarConcluida(id) {
-    setTarefas(prev => prev.map(t => (t.id === id ? { ...t, concluida: !t.concluida } : t)));
+    setTarefas(prev =>
+      prev.map(t => (t.id === id ? { ...t, concluida: !t.concluida } : t))
+    );
   }
 
   function abrirModalEdicao(tarefa) {
@@ -189,6 +187,7 @@ function TaskFlow() {
         <Header tarefas={tarefas} />
         {carregar && <div className={styles.loading}>Carregando tarefas...</div>}
         {erro && <div className={styles.erro}>{erro}</div>}
+
         <section className={styles.formulario}>
           <input
             className={styles.inputTarefa}
@@ -215,6 +214,7 @@ function TaskFlow() {
             Adicionar
           </button>
         </section>
+
         <Colunas
           tarefas={tarefas}
           onMover={moverTarefa}
@@ -222,6 +222,7 @@ function TaskFlow() {
           onEditar={abrirModalEdicao}
           onAdicionar={abrirModalNovaTarefa}
         />
+
         <ListaTarefa
           tarefas={tarefas}
           onDeletar={solicitarDelecao}
@@ -229,6 +230,7 @@ function TaskFlow() {
           onEditar={abrirModalEdicao}
         />
       </main>
+
       <ModalTarefa
         aberto={modalAberto}
         tarefa={tarefaEmEdicao}
@@ -239,6 +241,7 @@ function TaskFlow() {
           setTarefaEmEdicao(null);
         }}
       />
+
       <ModalConfirmacao
         aberto={modalDeletarAberto}
         titulo="Excluir Tarefa?"
@@ -249,6 +252,7 @@ function TaskFlow() {
           setIdParaDeletar(null);
         }}
       />
+
       <footer className={styles.footer}>
         <p>TaskFlow 2026 - Aluno: Yan</p>
       </footer>
