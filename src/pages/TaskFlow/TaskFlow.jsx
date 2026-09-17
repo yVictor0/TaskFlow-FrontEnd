@@ -18,7 +18,7 @@ function TaskFlow() {
 
   const [texto, setTexto] = useState('');
   const [cep, setCep] = useState('');
-  const [prioridade, setPrioridade] = useState('Baixa 🟢');
+  const [prioridade, setPrioridade] = useState('Média 🟡'); 
   const [modalAberto, setModalAberto] = useState(false);
   const [tarefaEmEdicao, setTarefaEmEdicao] = useState(null);
   const [colunaParaNovaTarefa, setColunaParaNovaTarefa] = useState('afazer');
@@ -26,13 +26,12 @@ function TaskFlow() {
   const [modalDeletarAberto, setModalDeletarAberto] = useState(false);
   const [idParaDeletar, setIdParaDeletar] = useState(null);
 
-  // BUSCA ATUALIZADA (Sessão 7.3) — Token injetado via Interceptor
+  // BUSCA INICIAL DE TAREFAS
   useEffect(() => {
     async function carregarTarefas() {
       try {
         setCarregar(true);
         setErro('');
-        // api.get — token injetado automaticamente pelo interceptor
         const resposta = await api.get('/tarefas');
         setTarefas(resposta.data);
       } catch (e) {
@@ -46,6 +45,7 @@ function TaskFlow() {
     carregarTarefas();
   }, []);
 
+  // CONSULTA CEP (VIACEP)
   async function consultarCidade(cepDigitado) {
     const apenasNumeros = cepDigitado.replace(/\D/g, '');
     if (apenasNumeros.length !== 8) {
@@ -66,89 +66,87 @@ function TaskFlow() {
     }
   }
 
+
   async function adicionarTarefa() {
     if (texto.trim() === '') return;
 
-    let cidadeEncontrada = '';
-    if (cep.trim() !== '') {
-      cidadeEncontrada = await consultarCidade(cep);
-    }
+    await salvarTarefa({
+      texto: texto.trim(),
+      cep: cep,
+      concluida: false,
+      prioridade: prioridade,
+      coluna: 'afazer',
+      usuarioId: null
+    });
 
-    try {
-      const { data: novaTarefa } = await api.post('/tarefas', {
-        texto: texto.trim(),
-        cidade: cidadeEncontrada,
-        concluida: false,
-        prioridade: prioridade,
-        coluna: 'afazer'
-      });
-
-      setTarefas(prev => [...prev, novaTarefa]);
-      setTexto('');
-      setCep('');
-    } catch (e) {
-      setErro('Erro ao adicionar tarefa.');
-      console.error(e);
-    }
+    setTexto('');
+    setCep('');
   }
 
-  // SALVAR — POST / PUT conforme instrução do professor
   async function salvarTarefa(dados) {
+    setErro('');
     let cidadeEncontrada = dados.cidade || '';
 
     if (dados.cep && dados.cep.trim() !== '') {
       cidadeEncontrada = await consultarCidade(dados.cep);
     }
 
-    const payload = {
+     const payload = {
       ...dados,
-      cidade: cidadeEncontrada
+       cidade: cidadeEncontrada,
+       usuarioId: dados.usuarioId ?? null
     };
 
     if (dados.id === undefined) {
-      // CRIAR — POST /tarefas
       try {
-        const resposta = await api.post('/tarefas', payload);
-        // id real vem do servidor
-        setTarefas(prev => [...prev, resposta.data]);
-        setModalAberto(false);
+        const resposta = await api.post('/tarefas', dados);
+        setTarefas([...tarefas, resposta.data]);
       } catch (err) {
-        setErro('Erro ao criar tarefa.');
-        console.error(err);
+        setErro('Erro ao adicionar tarefa. Verifique o servidor e o payload.');
+        console.error('Erro de requisição:', err.response?.data || err.message);
       }
     } else {
-      // EDITAR — PUT /tarefas/:id
       try {
         const resposta = await api.put(`/tarefas/${dados.id}`, payload);
-        // garante que o estado reflete o servidor
-        setTarefas(prev => prev.map(t => (t.id === dados.id ? resposta.data : t)));
-        setModalAberto(false);
+        setTarefas(tarefas.map(t => (t.id === dados.id ? resposta.data : t)));
       } catch (err) {
         setErro('Erro ao editar tarefa.');
-        console.error(err);
+        console.error('Erro de requisição:', err.response?.data || err.message);
       }
     }
   }
+  
 
-  // DELETAR — DELETE /tarefas/:id
   async function deletarTarefa(id) {
     try {
       await api.delete(`/tarefas/${id}`);
-      // só remove do estado após confirmar no servidor
-      setTarefas(prev => prev.filter(t => t.id !== id));
+      setTarefas(tarefas.filter(t => t.id !== id));
     } catch (err) {
       setErro('Erro ao deletar tarefa.');
       console.error(err);
     }
   }
 
-  // MOVER — PUT /tarefas/:id com nova coluna
   async function moverTarefa(id, novaColuna) {
     try {
       const resposta = await api.put(`/tarefas/${id}`, { coluna: novaColuna });
-      setTarefas(prev => prev.map(t => (t.id === id ? resposta.data : t)));
+      setTarefas(tarefas.map(t => (t.id === id ? resposta.data : t)));
     } catch (err) {
       setErro('Erro ao mover tarefa.');
+      console.error(err);
+    }
+  }
+
+  async function alternarConcluida(id) {
+    setErro('');
+    const tarefa = tarefas.find(t => t.id === id);
+    if (!tarefa) return;
+
+    try {
+      const resposta = await api.patch(`/tarefas/${id}`, { concluida: !tarefa.concluida });
+      setTarefas(prev => prev.map(t => (t.id === id ? resposta.data : t)));
+    } catch (err) {
+      setErro('Erro ao alterar status da tarefa.');
       console.error(err);
     }
   }
@@ -162,12 +160,6 @@ function TaskFlow() {
     if (idParaDeletar) deletarTarefa(idParaDeletar);
     setModalDeletarAberto(false);
     setIdParaDeletar(null);
-  }
-
-  function alternarConcluida(id) {
-    setTarefas(prev =>
-      prev.map(t => (t.id === id ? { ...t, concluida: !t.concluida } : t))
-    );
   }
 
   function abrirModalEdicao(tarefa) {

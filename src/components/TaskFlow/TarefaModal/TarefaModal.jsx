@@ -11,6 +11,7 @@ function ModalTarefa({ aberto, tarefa, coluna, onSalvar, onFechar }) {
   useEffect(() => {
     if (aberto) {
       if (tarefa) {
+        // eslint-disable-next-line
         setTexto(tarefa.texto || '');
         setCidade(tarefa.cidade || '');
         setPrioridade(tarefa.prioridade || 'Média 🟡');
@@ -102,9 +103,9 @@ function ModalTarefa({ aberto, tarefa, coluna, onSalvar, onFechar }) {
         {cidade && <p className={styles.cidade}>📍 {cidade}</p>}
         
         <select value={prioridade} onChange={(e) => setPrioridade(e.target.value)}>
-          <option value="Alta 🔴">Alta 🔴</option>
-          <option value="Média 🟡">Média 🟡</option>
-          <option value="Baixa 🟢">Baixa 🟢</option>
+          <option value="alta">Alta 🔴</option>
+          <option value="media">Média 🟡</option>
+          <option value="baixa">Baixa 🟢</option>
         </select>
 
         <div className={styles.botoes}>

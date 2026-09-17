@@ -8,9 +8,9 @@ function ListaTarefa({ tarefas, onDeletar, onConcluir, onEditar }) {
         <p className="msg-vazia">Nenhuma Tarefa Cadastrada. Adicione uma acima!</p>
       ) : (
         <ul id="lista-tarefas">
-          {tarefas.map((t) => (
+          {tarefas.map((t, index) => (
             <ItemTarefa
-              key={t.id}
+              key={t.id ? `${t.id}-${index}` : index}
               tarefa={t}
               onDeletar={onDeletar}
               onConcluir={onConcluir}
@@ -19,10 +19,8 @@ function ListaTarefa({ tarefas, onDeletar, onConcluir, onEditar }) {
             />
           ))}
         </ul>
-        
       )}
     </section>
-    
   );
 }
 
