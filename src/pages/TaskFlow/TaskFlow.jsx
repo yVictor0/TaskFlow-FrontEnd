@@ -26,6 +26,12 @@ function TaskFlow() {
   const [modalDeletarAberto, setModalDeletarAberto] = useState(false);
   const [idParaDeletar, setIdParaDeletar] = useState(null);
 
+  const ColunaEmAndamento = (nomeColuna) => {
+    if (!nomeColuna) return false;
+    const col = nomeColuna.toLowerCase();
+    return  col === 'emandamento';
+  };
+
   useEffect(() => {
     async function carregarTarefas() {
       try {
@@ -50,40 +56,31 @@ function TaskFlow() {
       alert('CEP inválido! O CEP deve conter 8 dígitos.');
       return '';
     }
-       
 
     try {
-      const resposta = await axios.get(`https://viacep.com.br/ws/${apenasNumeros}/json/`); //entrou
+      const resposta = await axios.get(`https://viacep.com.br/ws/${apenasNumeros}/json/`);
       if (resposta.data.erro) {
-         
         alert('CEP não encontrado!');
-       
         return '';
       }
-       
-      
       return `${resposta.data.localidade} - ${resposta.data.uf}`;
-      
     } catch (erro) {
       console.error('Erro ao buscar o CEP:', erro);
       alert('Erro ao buscar o CEP. Verifique sua conexão.');
       return '';
-      
     }
   }
 
-  
   async function adicionarTarefa() {
     if (texto.trim() === '') return;
 
-    
     await salvarTarefa({
       texto: texto.trim(),
       cep: cep,
       concluida: false,
       prioridade: prioridade,
       coluna: 'afazer',
-      usuarioId: null
+      usuarioId: 1
     });
 
     setTexto('');
@@ -91,39 +88,51 @@ function TaskFlow() {
   }
 
   async function salvarTarefa(dados) {
-  setErro('');
-  
-  let cidadeEncontrada = dados.cidade || '';
-  if (dados.cep && dados.cep.trim() !== '') {
-    cidadeEncontrada = await consultarCidade(dados.cep);
-  }
+    setErro('');
 
-  const payload = {
-    ...dados,
-    cep: dados.cep,               
-    cidade: cidadeEncontrada,    
-    usuarioId: dados.usuarioId ?? null,
-  };
+    if (ColunaEmAndamento(dados.coluna)) {
+      const totalEmAndamento = tarefas.filter(
+        t => ColunaEmAndamento(t.coluna) && t.id !== dados.id
+      ).length;
 
-  if (dados.id === undefined) {
-    try {
-      const resposta = await api.post('/tarefas', payload);
-      setTarefas([...tarefas, resposta.data]);
-    } catch (err) {
-      setErro('Erro ao adicionar tarefa. Verifique o servidor e o payload.');
-      console.error('Erro de requisição:', err.response?.data || err.message);
+      if (totalEmAndamento >= 2) {
+        setErro('vc tem tarefas dms');
+        return;
+      }
     }
-  } else {
-    try {
-      const resposta = await api.put(`/tarefas/${dados.id}`, payload);
-      setTarefas(tarefas.map(t => (t.id === dados.id ? resposta.data : t)));
-    } catch (err) {
-      setErro('Erro ao editar tarefa.');
-      console.error('Erro de requisição:', err.response?.data || err.message);
+
+    let cidadeEncontrada = dados.cidade || '';
+    if (dados.cep && dados.cep.trim() !== '') {
+      cidadeEncontrada = await consultarCidade(dados.cep);
+    }
+
+    const payload = {
+      ...dados,
+      cep: dados.cep,               
+      cidade: cidadeEncontrada,    
+      usuarioId: dados.usuarioId || 1,
+    };
+
+    if (dados.id === undefined) {
+      try {
+        const resposta = await api.post('/tarefas', payload);
+        setTarefas([...tarefas, resposta.data]);
+      } catch (err) {
+        const mensagemApi = err.response?.data?.erro || err.response?.data?.message;
+        setErro(mensagemApi || 'Erro ao adicionar tarefa.');
+        console.error('Erro de requisição:', err.response?.data || err.message);
+      }
+    } else {
+      try {
+        const resposta = await api.put(`/tarefas/${dados.id}`, payload);
+        setTarefas(tarefas.map(t => (t.id === dados.id ? resposta.data : t)));
+      } catch (err) {
+        const mensagemApi = err.response?.data?.erro || err.response?.data?.message;
+        setErro(mensagemApi || 'Erro ao editar tarefa.');
+        console.error('Erro de requisição:', err.response?.data || err.message);
+      }
     }
   }
-}
-  
 
   async function deletarTarefa(id) {
     try {
@@ -136,12 +145,35 @@ function TaskFlow() {
   }
 
   async function moverTarefa(id, novaColuna) {
+    setErro('');
+
+    if (ColunaEmAndamento(novaColuna)) {
+      const totalEmAndamento = tarefas.filter(
+        t => ColunaEmAndamento(t.coluna) && t.id !== id
+      ).length;
+
+      if (totalEmAndamento >= 2) {
+        alert('chegou ao limite de tarefas em andamentos');
+        return;
+      }
+    }
+
+    const tarefaAtual = tarefas.find(t => t.id === id);
+    if (!tarefaAtual) return;
+
+    const payload = {
+      ...tarefaAtual,
+      coluna: novaColuna,
+      usuarioId: tarefaAtual.usuarioId || 1
+    };
+
     try {
-      const resposta = await api.put(`/tarefas/${id}`, { coluna: novaColuna });
+      const resposta = await api.put(`/tarefas/${id}`, payload);
       setTarefas(tarefas.map(t => (t.id === id ? resposta.data : t)));
     } catch (err) {
-      setErro('Erro ao mover tarefa.');
-      console.error(err);
+      const mensagemApi = err.response?.data?.erro || err.response?.data?.message;
+      setErro(mensagemApi || 'Erro ao mover tarefa.');
+      console.error('Erro de requisição:', err.response?.data || err.message);
     }
   }
 
