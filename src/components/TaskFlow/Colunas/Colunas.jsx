@@ -30,7 +30,7 @@ function Colunas({ tarefas, onMover, onDeletar, onEditar, onAdicionar }) {
           <ul className={styles.listaKanban}>
             {lista.map(tarefa => (
               <ItemTarefa
-                key={tarefa.id}
+                key={`${idColuna}-${tarefa.id}`}
                 tarefa={tarefa}
                 onMover={onMover}
                 onDeletar={onDeletar}

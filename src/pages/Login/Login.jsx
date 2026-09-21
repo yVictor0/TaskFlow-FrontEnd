@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-// 1. Adicionar import no topo (ajustado para o seu caminho relativo)
 import api from '../../interceptor/api'; 
 import { useAuth } from '../../contexts/AuthContext';
 import './Login.css';
 
 function Login() {
-  // 2. Estado 'email' para o input de login
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState('');
@@ -15,7 +13,6 @@ function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  // 3. Versão async do handleLogin
   async function handleLogin() {
     setErro('');
     try {

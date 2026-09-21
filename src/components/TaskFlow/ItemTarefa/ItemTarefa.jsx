@@ -8,7 +8,7 @@ function ItemTarefa({
   exibirAcoesKanban = false,
   onEditar
 }) {
-  const { id, texto, cidade, prioridade, concluida } = tarefa;
+  const { id, texto, cidade, prioridade, concluida, } = tarefa;
   
   const coluna = tarefa.coluna || 'afazer';
 

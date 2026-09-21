@@ -26,7 +26,6 @@ function TaskFlow() {
   const [modalDeletarAberto, setModalDeletarAberto] = useState(false);
   const [idParaDeletar, setIdParaDeletar] = useState(null);
 
-  // BUSCA INICIAL DE TAREFAS
   useEffect(() => {
     async function carregarTarefas() {
       try {
@@ -45,31 +44,39 @@ function TaskFlow() {
     carregarTarefas();
   }, []);
 
-  // CONSULTA CEP (VIACEP)
   async function consultarCidade(cepDigitado) {
     const apenasNumeros = cepDigitado.replace(/\D/g, '');
     if (apenasNumeros.length !== 8) {
       alert('CEP inválido! O CEP deve conter 8 dígitos.');
       return '';
     }
+       
+
     try {
-      const resposta = await axios.get(`https://viacep.com.br/ws/${apenasNumeros}/json/`);
+      const resposta = await axios.get(`https://viacep.com.br/ws/${apenasNumeros}/json/`); //entrou
       if (resposta.data.erro) {
+         
         alert('CEP não encontrado!');
+       
         return '';
       }
+       
+      
       return `${resposta.data.localidade} - ${resposta.data.uf}`;
+      
     } catch (erro) {
       console.error('Erro ao buscar o CEP:', erro);
       alert('Erro ao buscar o CEP. Verifique sua conexão.');
       return '';
+      
     }
   }
 
-
+  
   async function adicionarTarefa() {
     if (texto.trim() === '') return;
 
+    
     await salvarTarefa({
       texto: texto.trim(),
       cep: cep,
@@ -84,37 +91,38 @@ function TaskFlow() {
   }
 
   async function salvarTarefa(dados) {
-    setErro('');
-    let cidadeEncontrada = dados.cidade || '';
+  setErro('');
+  
+  let cidadeEncontrada = dados.cidade || '';
+  if (dados.cep && dados.cep.trim() !== '') {
+    cidadeEncontrada = await consultarCidade(dados.cep);
+  }
 
-    if (dados.cep && dados.cep.trim() !== '') {
-      cidadeEncontrada = await consultarCidade(dados.cep);
+  const payload = {
+    ...dados,
+    cep: dados.cep,               
+    cidade: cidadeEncontrada,    
+    usuarioId: dados.usuarioId ?? null,
+  };
+
+  if (dados.id === undefined) {
+    try {
+      const resposta = await api.post('/tarefas', payload);
+      setTarefas([...tarefas, resposta.data]);
+    } catch (err) {
+      setErro('Erro ao adicionar tarefa. Verifique o servidor e o payload.');
+      console.error('Erro de requisição:', err.response?.data || err.message);
     }
-
-     const payload = {
-      ...dados,
-       cidade: cidadeEncontrada,
-       usuarioId: dados.usuarioId ?? null
-    };
-
-    if (dados.id === undefined) {
-      try {
-        const resposta = await api.post('/tarefas', dados);
-        setTarefas([...tarefas, resposta.data]);
-      } catch (err) {
-        setErro('Erro ao adicionar tarefa. Verifique o servidor e o payload.');
-        console.error('Erro de requisição:', err.response?.data || err.message);
-      }
-    } else {
-      try {
-        const resposta = await api.put(`/tarefas/${dados.id}`, payload);
-        setTarefas(tarefas.map(t => (t.id === dados.id ? resposta.data : t)));
-      } catch (err) {
-        setErro('Erro ao editar tarefa.');
-        console.error('Erro de requisição:', err.response?.data || err.message);
-      }
+  } else {
+    try {
+      const resposta = await api.put(`/tarefas/${dados.id}`, payload);
+      setTarefas(tarefas.map(t => (t.id === dados.id ? resposta.data : t)));
+    } catch (err) {
+      setErro('Erro ao editar tarefa.');
+      console.error('Erro de requisição:', err.response?.data || err.message);
     }
   }
+}
   
 
   async function deletarTarefa(id) {

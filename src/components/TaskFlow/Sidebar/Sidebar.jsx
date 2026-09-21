@@ -26,13 +26,20 @@ function Sidebar() {
       >
         {estaAberta ? '✕' : '☰'}
       </button>
+      {estaAberta && (
+        <div 
+          className={styles.overlay} 
+          onClick={() => setEstaAberta(false)} 
+          aria-hidden="true"
+        />
+      )}
 
       <aside 
         className={`${styles.sidebar} ${estaAberta ? styles.aberta : styles.fechada}`} 
         aria-label="Menu Lateral"
       >
         <div className={styles.logo}>
-          <h1>MeuApp</h1>
+          <h1>TaskFlow</h1>
         </div>
 
         <nav className={styles.nav}>
