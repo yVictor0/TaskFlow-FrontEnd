@@ -10,7 +10,6 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  box-sizing: border-box; 
 }
 
 .container {
@@ -31,7 +30,6 @@
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  box-sizing: border-box;
 }
 
 .inputTarefa, 
@@ -40,10 +38,13 @@
   padding: 12px 14px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
-  font-size: 15px;
+  font-size: 1rem; /* Alterado de 15px para 16px equivalente: evita zoom automático no Safari/iOS */
   outline: none;
-  box-sizing: border-box; 
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  
+  /* Melhora usabilidade em telas de toque */
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .inputTarefa:focus, 
@@ -57,8 +58,10 @@
   color: #ffffff;
   border: none;
   padding: 12px 20px;
+  min-height: 48px; /* Área de toque ideal para celulares (padrão WCAG) */
   border-radius: 6px;
-  font-size: 16px;
+  font-size: 1px;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   display: flex;
@@ -68,6 +71,7 @@
   transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
   margin-top: 4px;
   user-select: none;
+  -webkit-tap-highlight-color: transparent; /* Remove o quadro escuro ao tocar no mobile */
 }
 
 .btnAdicionar:hover {
@@ -97,14 +101,24 @@
   letter-spacing: 0.5px;
 }
 
+/* --- Ajustes Responsivos para Mobile --- */
 @media (max-width: 768px) {
   .app {
-    padding: 16px;
-    border-radius: 0;
-    min-height: 100vh;
+    padding: 16px 12px;
+    border-radius: 8px; /* Mantém um leve arredondamento para não grudar totalmente */
+    min-height: 100dvh; /* Usa 'dvh' para lidar com a barra do navegador mobile sem quebrar o scroll */
+  }
+
+  .container {
+    gap: 16px; /* Espaçamento mais compacto no celular */
   }
 
   .formulario {
     padding: 16px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05); /* Sombra mais suave em telas pequenas */
+  }
+
+  .footer {
+    padding-top: 1.25rem;
   }
 }
