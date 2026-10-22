@@ -8,7 +8,8 @@ function ItemTarefa({
   exibirAcoesKanban = false,
   onEditar
 }) {
-  const { id, texto, cidade, prioridade, concluida, } = tarefa;
+  // Desestruturando as variáveis vindas da consulta SQL (JOIN)
+  const { id, texto, cidade, prioridade_nome, prioridade_cor, concluida } = tarefa;
   
   const coluna = tarefa.coluna || 'afazer';
 
@@ -23,7 +24,13 @@ function ItemTarefa({
       </div>
 
       <div className={styles.acoes}>
-        <span className={styles.badgePrioridade}>{prioridade}</span>
+        {/* Badge da Prioridade com Cor e Nome dinâmicos do Banco */}
+        <span 
+          className={styles.badgePrioridade}
+          style={{ backgroundColor: prioridade_cor || '#ccc' }}
+        >
+          {prioridade_nome}
+        </span>
 
         {exibirAcoesKanban && (
           <div className={styles.botoesMover}>

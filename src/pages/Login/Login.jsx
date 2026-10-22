@@ -1,71 +1,64 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
-import api from '../../interceptor/api'; 
-import { useAuth } from '../../contexts/AuthContext';
-import './Login.css';
+import api, { mensagensDeErro } from '../../interceptor/api';
+import styles from './Login.module.css';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState('');
-  const [shake, setShake] = useState(false);
-  
-  const { login } = useAuth();
-  const navigate = useNavigate();
+  const [carregando, setCarregando] = useState(false);
 
-  async function handleLogin() {
+  async function handleLogin(e) {
+    e.preventDefault();
     setErro('');
+    setCarregando(true);
+
     try {
-      const resposta = await api.post('/auth/login', {
-        email,
-        senha,
-      });
-      
-      const { token, usuario } = resposta.data;
-      login(usuario, token); 
-      navigate('/'); 
+      const resposta = await api.post('/auth/login', { email, senha });
+
+      // Salva os dados de autenticação no localStorage
+      localStorage.setItem('token', resposta.data.token);
+      localStorage.setItem('usuario', JSON.stringify(resposta.data.usuario));
+
+      // Redireciona para a tela principal
+      window.location.href = '/taskflow';
     } catch (err) {
-      setErro(err.response?.data?.erro || 'Erro ao fazer login');
-      setShake(true);
-      setTimeout(() => setShake(false), 500);
+      console.error('Erro na requisição de login:', err);
+      // Utiliza a função mensagensDeErro para obter a mensagem tratada
+      const mensagens = mensagensDeErro(err);
+      setErro(mensagens.join(' '));
+    } finally {
+      setCarregando(false);
     }
   }
 
   return (
-    <div className='login-container'>
-      <div className={`login-card ${shake ? 'shake' : ''}`}>
-        <h1 className='login-logo'>TaskFlow</h1>
-        <p className='login-subtitulo'>Faça login para continuar</p>
+    <div className={styles.container}>
+      <form className={styles.card} onSubmit={handleLogin}>
+        <h2>TaskFlow</h2>
+        <p>Faça login para continuar</p>
+
+        {erro && <div className={styles.erro}>{erro}</div>}
 
         <input
-          className='login-input'
-          type='email'
-          placeholder='E-mail'
+          type="email"
+          placeholder="E-mail"
           value={email}
-          onChange={e => setEmail(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && handleLogin()}
+          onChange={(e) => setEmail(e.target.value)}
+          required
         />
-
         <input
-          className='login-input'
-          type='password'
-          placeholder='Senha'
+          type="password"
+          placeholder="Senha"
           value={senha}
-          onChange={e => setSenha(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && handleLogin()}
+          onChange={(e) => setSenha(e.target.value)}
+          required
         />
 
-        {erro && <p className='login-erro'>{erro}</p>}
-
-        <button className='login-btn' onClick={handleLogin}>
-          Entrar
+        <button type="submit" disabled={carregando}>
+          {carregando ? 'Entrando...' : 'Entrar'}
         </button>
-
-        <p className='login-aviso'>
-          Este login é apenas para fins didáticos.
-          Credenciais reais vêm no módulo back-end.
-        </p>
-      </div>
+      </form>
     </div>
   );
 }

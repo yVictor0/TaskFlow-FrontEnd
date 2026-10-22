@@ -1,0 +1,80 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100vw; /* Garante que ocupa toda a largura da janela */
+  background-color: #e5e7eb; /* Cor de fundo idêntica à das laterais */
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.card {
+  background: #ffffff;
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+  width: 100%;
+  max-width: 380px; /* Aplica o limite apenas ao cartão branco */
+}
+
+.card h2 {
+  margin: 0;
+  color: #1e293b;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.card p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.card input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.card input:focus {
+  border-color: #2563eb;
+}
+
+.card button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #3b82f6;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+.card button:hover {
+  background-color: #2563eb;
+}
+
+.erro {
+  width: 100%;
+  color: #dc2626;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  padding: 0.6rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  text-align: center;
+  box-sizing: border-box;
+}
