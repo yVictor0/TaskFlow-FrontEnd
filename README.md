@@ -1,4 +1,4 @@
-# TaskFlow -- FrontEnd
+# TaskFlow - FrontEnd
 
 > Aplicação web para gerenciamento e organização de tarefas do projeto TaskFlow.
 
